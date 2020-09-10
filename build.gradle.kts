@@ -15,6 +15,8 @@ dependencies {
 
     testImplementation("org.assertj:assertj-core:3.16.1")
 
+    testImplementation("org.mockito:mockito-core:3.5.10")
+
     // Use JUnit Jupiter Engine for testing.
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.2")
 }

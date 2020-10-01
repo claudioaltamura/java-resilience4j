@@ -7,7 +7,6 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.core.SupplierUtils;
 import org.junit.jupiter.api.Test;
 
-import java.rmi.Remote;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -94,6 +93,31 @@ class CircuitBreakerTest {
             } catch(Exception ignore) {}
         }
         verify(service,times(5)).process(any(Integer.class));
+    }
+
+    @Test
+    void simpleConfiguration() {
+      CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
+        .failureRateThreshold(50)
+        .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
+        .minimumNumberOfCalls(10)
+        .build();
+      CircuitBreakerRegistry circuitBreakerRegistry =
+        CircuitBreakerRegistry.of(circuitBreakerConfig);
+      CircuitBreaker circuitBreakerWithCustomConfig = circuitBreakerRegistry
+        .circuitBreaker("custom");
+
+      RemoteService service = mock(RemoteService.class);
+      Function<Integer, Integer> decorated = CircuitBreaker.decorateFunction(circuitBreakerWithCustomConfig, service::process);
+      when(service.process(any(Integer.class))).thenThrow(new RuntimeException());
+
+      for(int i = 0; i < 110; i++) {
+        try {
+          decorated.apply(i);
+        } catch(Exception ignore) {
+        }
+      }
+      verify(service,times(10)).process(any(Integer.class));
     }
 
 }
